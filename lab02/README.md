@@ -7,7 +7,7 @@ No segundo exemplo apresentado, um total de oito processos é gerado. Isso se de
 
 # Console AWS
 
-![image](https://github.com/KaduRosendo/Sistemas-operacionais/assets/100209440/3f7b0ad5-4219-49d0-b3d6-a6f914c6849f)
+
 
 
 
