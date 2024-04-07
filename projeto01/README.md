@@ -13,3 +13,10 @@
 -
 
 
+## Execuções 
+Threads (E_1)
+
+Processos (E_1)
+
+
+
