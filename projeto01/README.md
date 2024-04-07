@@ -14,9 +14,9 @@
 
 
 ## Execuções 
-# Threads (E_1)
+### Threads (E_1)
 
-# Processos (E_1)
+### Processos (E_1)
 
 
 
