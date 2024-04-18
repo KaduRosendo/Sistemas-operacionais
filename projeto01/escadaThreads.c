@@ -1,71 +1,117 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 typedef struct {
-    int time;
-    int direction; // 0 para esquerda-para-direita, 1 para direita-para-esquerda
+  int time;
+  int direction;
 } Person;
 
-Person people[10000];
-int n;
-int last_time = 0; // Último tempo registrado de uso da escada
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+int globalTime = 0;
+int direction = 0;
+int amountPeople = 0;
+int endTime = 0;
+int fd[2];
 
-// Função executada por cada thread para simular uma pessoa usando a escada rolante
-void* simulate_person(void* arg) {
-    Person* p = (Person*)arg;
-    
-    pthread_mutex_lock(&mutex);
-    
-    // Espera até que seja possível usar a escada rolante conforme a direção desejada e o tempo de chegada
-    while(p->time > last_time) {
-        usleep((p->time - last_time) * 1000); // Simula a espera pela escada rolante
+void person(Person *people) {
+  direction = people[0].direction;
+  endTime = people[0].time + 10;
+
+  int counter = 0;
+  int endCounter = 0;
+  Person waiting;
+
+  while (1) {
+    if (globalTime == endTime) {
+      if (direction == 1) {
+        direction = 0;
+      } else {
+        direction = 1;
+      }
+
+      if (waiting.direction == direction) {
+        endTime = endTime + 10;
+        endCounter++;
+        write(fd[1], &endTime, sizeof(endTime));
+      }
     }
-    // Atualiza o último tempo de uso considerando o tempo para atravessar
-    last_time = p->time + 10;
-    
-    pthread_mutex_unlock(&mutex);
-    
-    return NULL;
+
+    if (globalTime == people[counter].time) {
+      if (direction == people[counter].direction) {
+        if (people[counter].time <= endTime) {
+          endTime = people[counter].time + 10;
+          endCounter++;
+          write(fd[1], &endTime, sizeof(endTime));
+        }
+        counter++;
+      } else {
+        waiting = people[counter];
+        counter++;
+      }
+    }
+
+    globalTime++;
+    if (endCounter == amountPeople) {
+      break;
+    }
+  }
 }
 
 int main() {
-    // Lendo o arquivo de entrada
-    FILE *inputFile = fopen("input/E_1", "r");
-    if (inputFile == NULL) {
-        perror("Erro ao abrir arquivo de entrada");
-        return 1;
+  FILE *file = fopen("entrada.txt", "r");
+  if (file == NULL) {
+    printf("Erro ao abrir arquivo de entrada.\n");
+    return 1;
+  }
+
+  if (fscanf(file, "%d", &amountPeople) != 1) {
+    printf("Erro ao ler número de pessoas");
+    fclose(file);
+    return 1;
+  }
+
+  Person people[amountPeople];
+
+  for (int i = 0; i < amountPeople; i++) {
+    if (fscanf(file, "%d %d", &people[i].time, &people[i].direction) != 2) {
+      printf("Erro ao ler informações da pessoa %d.\n", i + 1);
+      fclose(file);
+      return 1;
     }
-    
-    fscanf(inputFile, "%d", &n);
-    for (int i = 0; i < n; i++) {
-        fscanf(inputFile, "%d %d", &people[i].time, &people[i].direction);
-    }
-    fclose(inputFile);
-    
-    pthread_t threads[n];
-    
-    // Criando uma thread para cada pessoa
-    for (int i = 0; i < n; i++) {
-        pthread_create(&threads[i], NULL, simulate_person, (void*)&people[i]);
-    }
-    
-    // Aguardando todas as threads terminarem
-    for (int i = 0; i < n; i++) {
-        pthread_join(threads[i], NULL);
-    }
-    
-    // Escrevendo o resultado no arquivo de saída
-    FILE *outputFile = fopen("output/E_1", "w");
-    if (outputFile == NULL) {
-        perror("Erro ao abrir arquivo de saída");
-        return 1;
-    }
-    
-    fprintf(outputFile, "%d\n", last_time);
-    fclose(outputFile);
-    
+  }
+
+  if (pipe(fd) == -1) {
+    printf("Pipe failed.\n");
+    return 1;
+  }
+
+  pid_t pid = fork();
+  if (pid < 0) {
+    printf("Erro ao criar processo para a pessoa.\n");
+    fclose(file);
+    return 1;
+  } else if (pid == 0) {
+    close(fd[0]);
+    person(people);
+    close(fd[1]);
     return 0;
+  }
+
+  int status;
+  if (waitpid(pid, &status, 0) < 0) {
+    printf("Erro ao aguardar processo da pessoa.\n");
+    fclose(file);
+    return 1;
+  }
+
+  close(fd[1]);
+  int temp;
+  while (read(fd[0], &temp, sizeof(temp)) > 0) {
+    endTime = temp;
+  }
+
+  printf("%d\n", endTime);
+  close(fd[0]);
+
+  return 0;
 }
