@@ -1,5 +1,5 @@
+#include <pthread.h>
 #include <stdio.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 typedef struct {
@@ -11,9 +11,10 @@ int globalTime = 0;
 int direction = 0;
 int amountPeople = 0;
 int endTime = 0;
-int fd[2];
 
-void person(Person *people) {
+void *person(void *arg) {
+  Person *people = (Person *)arg;
+
   direction = people[0].direction;
   endTime = people[0].time + 10;
 
@@ -32,7 +33,6 @@ void person(Person *people) {
       if (waiting.direction == direction) {
         endTime = endTime + 10;
         endCounter++;
-        write(fd[1], &endTime, sizeof(endTime));
       }
     }
 
@@ -41,7 +41,6 @@ void person(Person *people) {
         if (people[counter].time <= endTime) {
           endTime = people[counter].time + 10;
           endCounter++;
-          write(fd[1], &endTime, sizeof(endTime));
         }
         counter++;
       } else {
@@ -80,38 +79,20 @@ int main() {
     }
   }
 
-  if (pipe(fd) == -1) {
-    printf("Pipe failed.\n");
-    return 1;
-  }
-
-  pid_t pid = fork();
-  if (pid < 0) {
-    printf("Erro ao criar processo para a pessoa.\n");
-    fclose(file);
-    return 1;
-  } else if (pid == 0) {
-    close(fd[0]);
-    person(people);
-    close(fd[1]);
-    return 0;
-  }
-
-  int status;
-  if (waitpid(pid, &status, 0) < 0) {
-    printf("Erro ao aguardar processo da pessoa.\n");
+  pthread_t threads;
+  if (pthread_create(&threads, NULL, person, &people) != 0) {
+    printf("Erro ao criar thread para a pessoa %d.\n");
     fclose(file);
     return 1;
   }
 
-  close(fd[1]);
-  int temp;
-  while (read(fd[0], &temp, sizeof(temp)) > 0) {
-    endTime = temp;
+  if (pthread_join(threads, NULL) != 0) {
+    printf("Erro ao aguardar thread da pessoa.\n");
+    fclose(file);
+    return 1;
   }
 
   printf("%d\n", endTime);
-  close(fd[0]);
 
   return 0;
 }
