@@ -103,5 +103,7 @@ int main() {
   fprintf(outputFile, "%d\n", finalTime);
   fclose(outputFile);
 
+  printf("%d\n", finalTime);
+  
   return EXIT_SUCCESS;
 }
