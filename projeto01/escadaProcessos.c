@@ -106,7 +106,7 @@ int main() {
     int temp;
     FILE *outputFile = fopen("output.txt", "w");
     if (!outputFile) {
-        fprintf(stderr, "Falaha ao abrir o arquivo output\n");
+        fprintf(stderr, "Falha ao abrir o arquivo output\n");
         return EXIT_FAILURE;
     }
 
