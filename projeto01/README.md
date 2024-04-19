@@ -28,7 +28,10 @@ A garantia de que apenas uma direção está ativa de cada vez é assegurada pel
 ## Execuções 
 ### Threads (E_1)
 
+
+
 ### Processos (E_1)
 
+![image](https://github.com/KaduRosendo/Sistemas-operacionais/assets/100209440/31ae1a6f-8782-48da-8c3f-6298fcbd4c47)
 
 
