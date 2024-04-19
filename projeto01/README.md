@@ -12,11 +12,17 @@ O código de processos utiliza uma estratégia similar de prevenção de acesso 
 
 ### 2- Como garantir que somente uma das direções está ativa de cada vez em cada uma das abordagens?
 
--
+-Threads 
+
+A exclusividade da direção é controlada também por uma variável global direction, que é acessada e modificada pelas threads. A mudança de direção só é permitida após o término do período de uso, evitando que pessoas em direções opostas usem a escada ao mesmo tempo.
+
+-Processos
+
+A garantia de que apenas uma direção está ativa de cada vez é assegurada pelo uso sincronizado do pipe. Mudanças na direção são efetuadas somente depois que todos os dados relevantes são transmitidos e recebidos, garantindo que não haja conflito entre as direções de uso da escada.
 
 ### 3- Discorra sobre as diferenças entre as implementações utilizando threads e processos e diga qual foi mais eficiente na solução do problema, justificando sua resposta
 
--
+- Comparando as implementações com threads e processos para controlar o acesso à escada rolante, a abordagem com threads se destaca pela eficiência. Threads compartilham memória e sincronizam variáveis globais rapidamente, resultando em menos overhead e uma resposta mais ágil. Por outro lado, processos exigem comunicação via pipes, introduzindo atrasos e complexidade, além de consumirem mais recursos devido ao isolamento de memória. Portanto, para este caso específico, a implementação com threads é mais eficiente, proporcionando um controle de concorrência mais direto e eficaz.
 
 
 ## Execuções 
