@@ -117,6 +117,8 @@ int main() {
     fclose(outputFile);
     close(communicationPipe[0]);
 
+    printf("%d\n", scheduleEnd);
+    
     wait(NULL);
     return EXIT_SUCCESS;
 }
