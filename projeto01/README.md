@@ -4,9 +4,11 @@
 
 -Threads
 
-No código revisado, a sincronização do acesso à escada rolante é alcançada através do controle da direção e do tempo de ocupação. A escada rolante opera em duas direções possíveis, e cada indivíduo tem uma direção desejada que deve coincidir com a direção atual para permitir o acesso. Quando um indivíduo acessa a escada, ele a ocupa por 10 unidades de tempo, refletido pelo ajuste na variável finalTime. Caso a direção desejada de um indivíduo não seja a mesma da escada no momento, ele espera até que a direção mude após o término do tempo de ocupação atual. Este gerenciamento assegura que em nenhum momento mais de uma pessoa utilize a escada simultaneamente, mantendo a operação segura e ordenada
+Para prevenir acessos simultâneos à escada rolante, o código utilizando as threads gerencia o acesso através de variáveis globais que controlam o tempo de ocupação e a direção atual da escada. Quando uma pessoa inicia o uso da escada, o tempo de ocupação é atualizado para refletir um intervalo durante o qual ninguém mais pode entrar, e a direção é mantida constante. A lógica implementada garante que enquanto uma pessoa está na escada, seu tempo e direção permanecem bloqueados para outros, e a transição de direção só ocorre quando o tempo expira
 
 -Processos
+
+O código de processos utiliza uma estratégia similar de prevenção de acesso simultâneo, com a direção e o tempo de ocupação controlados. No entanto, a comunicação entre os processos é realizada por meio de pipes, uma abordagem que isola mais os dados mas introduz latência e complexidade adicional. Quando um processo filho altera o estado da escada, como a extensão do tempo de ocupação, ele precisa enviar essas informações de volta ao processo pai através do pipe, o que pode introduzir atrasos.
 
 ### 2- Como garantir que somente uma das direções está ativa de cada vez em cada uma das abordagens?
 
