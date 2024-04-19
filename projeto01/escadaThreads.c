@@ -1,98 +1,107 @@
 #include <pthread.h>
 #include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>
 
 typedef struct {
-  int time;
-  int direction;
-} Person;
+  int arrivalTime;
+  int moveDirection;
+} Individual;
 
-int globalTime = 0;
-int direction = 0;
-int amountPeople = 0;
-int endTime = 0;
+int currentTime = 0;
+int currentDirection = 0;
+int totalIndividuals = 0;
+int finalTime = 0;
 
-void *person(void *arg) {
-  Person *people = (Person *)arg;
+void *processMovement(void *arg) {
+  Individual *queue = (Individual *)arg;
 
-  direction = people[0].direction;
-  endTime = people[0].time + 10;
+  currentDirection = queue[0].moveDirection;
+  finalTime = queue[0].arrivalTime + 10;
 
-  int counter = 0;
-  int endCounter = 0;
-  Person waiting;
+  int index = 0;
+  int processedCount = 0;
+  Individual nextInLine;
 
   while (1) {
-    if (globalTime == endTime) {
-      if (direction == 1) {
-        direction = 0;
-      } else {
-        direction = 1;
-      }
-
-      if (waiting.direction == direction) {
-        endTime = endTime + 10;
-        endCounter++;
+    if (currentTime == finalTime) {
+      currentDirection = 1 - currentDirection; // Toggle direction
+      if (nextInLine.moveDirection == currentDirection) {
+        finalTime += 10;
+        processedCount++;
       }
     }
 
-    if (globalTime == people[counter].time) {
-      if (direction == people[counter].direction) {
-        if (people[counter].time <= endTime) {
-          endTime = people[counter].time + 10;
-          endCounter++;
+    if (currentTime == queue[index].arrivalTime) {
+      if (currentDirection == queue[index].moveDirection) {
+        if (queue[index].arrivalTime <= finalTime) {
+          finalTime = queue[index].arrivalTime + 10;
+          processedCount++;
         }
-        counter++;
+        index++;
       } else {
-        waiting = people[counter];
-        counter++;
+        nextInLine = queue[index];
+        index++;
       }
     }
 
-    globalTime++;
-    if (endCounter == amountPeople) {
+    currentTime++;
+    if (processedCount == totalIndividuals) {
       break;
     }
   }
+
+  return NULL;
 }
 
 int main() {
-  FILE *file = fopen("entrada.txt", "r");
-  if (file == NULL) {
-    printf("Erro ao abrir arquivo de entrada.\n");
-    return 1;
+  FILE *inputFile = fopen("input.txt", "r");
+  if (!inputFile) {
+    fprintf(stderr, "Failed to open input file.\n");
+    return EXIT_FAILURE;
   }
 
-  if (fscanf(file, "%d", &amountPeople) != 1) {
-    printf("Erro ao ler número de pessoas");
-    fclose(file);
-    return 1;
+  if (fscanf(inputFile, "%d", &totalIndividuals) != 1) {
+    fprintf(stderr, "Failed to read the number of individuals.\n");
+    fclose(inputFile);
+    return EXIT_FAILURE;
   }
 
-  Person people[amountPeople];
+  Individual *queue = malloc(totalIndividuals * sizeof(Individual));
+  if (!queue) {
+    fprintf(stderr, "Failed to allocate memory for individuals.\n");
+    fclose(inputFile);
+    return EXIT_FAILURE;
+  }
 
-  for (int i = 0; i < amountPeople; i++) {
-    if (fscanf(file, "%d %d", &people[i].time, &people[i].direction) != 2) {
-      printf("Erro ao ler informações da pessoa %d.\n", i + 1);
-      fclose(file);
-      return 1;
+  for (int i = 0; i < totalIndividuals; i++) {
+    if (fscanf(inputFile, "%d %d", &queue[i].arrivalTime, &queue[i].moveDirection) != 2) {
+      fprintf(stderr, "Failed to read data for individual %d.\n", i + 1);
+      fclose(inputFile);
+      free(queue);
+      return EXIT_FAILURE;
     }
   }
 
-  pthread_t threads;
-  if (pthread_create(&threads, NULL, person, &people) != 0) {
-    printf("Erro ao criar thread para a pessoa %d.\n");
-    fclose(file);
-    return 1;
+  fclose(inputFile);
+
+  pthread_t thread;
+  if (pthread_create(&thread, NULL, processMovement, queue) != 0) {
+    fprintf(stderr, "Failed to create thread.\n");
+    free(queue);
+    return EXIT_FAILURE;
   }
 
-  if (pthread_join(threads, NULL) != 0) {
-    printf("Erro ao aguardar thread da pessoa.\n");
-    fclose(file);
-    return 1;
+  pthread_join(thread, NULL);
+  free(queue);
+
+  FILE *outputFile = fopen("output.txt", "w");
+  if (!outputFile) {
+    fprintf(stderr, "Failed to open output file.\n");
+    return EXIT_FAILURE;
   }
 
-  printf("%d\n", endTime);
+  fprintf(outputFile, "%d\n", finalTime);
+  fclose(outputFile);
 
-  return 0;
+  return EXIT_SUCCESS;
 }
