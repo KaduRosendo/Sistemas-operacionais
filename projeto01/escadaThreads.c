@@ -24,7 +24,7 @@ void *processMovement(void *arg) {
 
   while (1) {
     if (currentTime == finalTime) {
-      currentDirection = 1 - currentDirection; // Toggle direction
+      currentDirection = 1 - currentDirection;
       if (nextInLine.moveDirection == currentDirection) {
         finalTime += 10;
         processedCount++;
@@ -56,26 +56,26 @@ void *processMovement(void *arg) {
 int main() {
   FILE *inputFile = fopen("input.txt", "r");
   if (!inputFile) {
-    fprintf(stderr, "Failed to open input file.\n");
+    fprintf(stderr, "Falha ao abrir o arquivo input\n");
     return EXIT_FAILURE;
   }
 
   if (fscanf(inputFile, "%d", &totalIndividuals) != 1) {
-    fprintf(stderr, "Failed to read the number of individuals.\n");
+    fprintf(stderr, "Falha ao ler o número de individuos\n");
     fclose(inputFile);
     return EXIT_FAILURE;
   }
 
   Individual *queue = malloc(totalIndividuals * sizeof(Individual));
   if (!queue) {
-    fprintf(stderr, "Failed to allocate memory for individuals.\n");
+    fprintf(stderr, "Falha ao alocar memória para os individuos\n");
     fclose(inputFile);
     return EXIT_FAILURE;
   }
 
   for (int i = 0; i < totalIndividuals; i++) {
     if (fscanf(inputFile, "%d %d", &queue[i].arrivalTime, &queue[i].moveDirection) != 2) {
-      fprintf(stderr, "Failed to read data for individual %d.\n", i + 1);
+      fprintf(stderr, "Falha ao ler dados dos individuos %d.\n", i + 1);
       fclose(inputFile);
       free(queue);
       return EXIT_FAILURE;
@@ -86,7 +86,7 @@ int main() {
 
   pthread_t thread;
   if (pthread_create(&thread, NULL, processMovement, queue) != 0) {
-    fprintf(stderr, "Failed to create thread.\n");
+    fprintf(stderr, "Falha na criação do Thread\n");
     free(queue);
     return EXIT_FAILURE;
   }
@@ -96,7 +96,7 @@ int main() {
 
   FILE *outputFile = fopen("output.txt", "w");
   if (!outputFile) {
-    fprintf(stderr, "Failed to open output file.\n");
+    fprintf(stderr, "Falha ao abrir o arquio output\n");
     return EXIT_FAILURE;
   }
 
