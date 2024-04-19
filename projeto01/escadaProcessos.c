@@ -56,26 +56,26 @@ void handleTraveller(Traveller *travellers) {
 int main() {
     FILE *inputFile = fopen("input.txt", "r");
     if (inputFile == NULL) {
-        fprintf(stderr, "Failed to open input file.\n");
+        fprintf(stderr, "Falha ao abrir o arquivo input\n");
         return EXIT_FAILURE;
     }
 
     if (fscanf(inputFile, "%d", &numberOfTravellers) != 1) {
-        fprintf(stderr, "Failed to read the number of travellers.\n");
+        fprintf(stderr, "Falha ao ler o número de passageiros\n");
         fclose(inputFile);
         return EXIT_FAILURE;
     }
 
     Traveller *travellers = malloc(numberOfTravellers * sizeof(Traveller));
     if (travellers == NULL) {
-        fprintf(stderr, "Memory allocation failed.\n");
+        fprintf(stderr, "Alocação de memória falhou\n");
         fclose(inputFile);
         return EXIT_FAILURE;
     }
 
     for (int i = 0; i < numberOfTravellers; i++) {
         if (fscanf(inputFile, "%d %d", &travellers[i].scheduledTime, &travellers[i].preferredDirection) != 2) {
-            fprintf(stderr, "Failed to read information for traveller %d.\n", i + 1);
+            fprintf(stderr, "Falha ao ler as informações dos passageiros %d\n", i + 1);
             free(travellers);
             fclose(inputFile);
             return EXIT_FAILURE;
@@ -84,14 +84,14 @@ int main() {
     fclose(inputFile);
 
     if (pipe(communicationPipe) == -1) {
-        fprintf(stderr, "Pipe creation failed.\n");
+        fprintf(stderr, "Falha na criação do Pipe\n");
         free(travellers);
         return EXIT_FAILURE;
     }
 
     pid_t pid = fork();
     if (pid == -1) {
-        fprintf(stderr, "Process creation failed.\n");
+        fprintf(stderr, "Falha na criação do Processo\n");
         free(travellers);
         return EXIT_FAILURE;
     } else if (pid == 0) {
@@ -106,7 +106,7 @@ int main() {
     int temp;
     FILE *outputFile = fopen("output.txt", "w");
     if (!outputFile) {
-        fprintf(stderr, "Failed to open output file.\n");
+        fprintf(stderr, "Falaha ao abrir o arquivo output\n");
         return EXIT_FAILURE;
     }
 
