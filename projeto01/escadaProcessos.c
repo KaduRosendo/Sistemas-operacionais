@@ -1,117 +1,122 @@
 #include <stdio.h>
-#include <sys/wait.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 typedef struct {
-  int time;
-  int direction;
-} Person;
+    int scheduledTime;
+    int preferredDirection;
+} Traveller;
 
-int globalTime = 0;
-int direction = 0;
-int amountPeople = 0;
-int endTime = 0;
-int fd[2];
+int currentTime = 0;
+int activeDirection = 0;
+int numberOfTravellers = 0;
+int scheduleEnd = 0;
+int communicationPipe[2];
 
-void person(Person *people) {
-  direction = people[0].direction;
-  endTime = people[0].time + 10;
+void handleTraveller(Traveller *travellers) {
+    activeDirection = travellers[0].preferredDirection;
+    scheduleEnd = travellers[0].scheduledTime + 10;
 
-  int counter = 0;
-  int endCounter = 0;
-  Person waiting;
+    int index = 0;
+    int processedTravellers = 0;
+    Traveller onHold;
 
-  while (1) {
-    if (globalTime == endTime) {
-      if (direction == 1) {
-        direction = 0;
-      } else {
-        direction = 1;
-      }
-
-      if (waiting.direction == direction) {
-        endTime = endTime + 10;
-        endCounter++;
-        write(fd[1], &endTime, sizeof(endTime));
-      }
-    }
-
-    if (globalTime == people[counter].time) {
-      if (direction == people[counter].direction) {
-        if (people[counter].time <= endTime) {
-          endTime = people[counter].time + 10;
-          endCounter++;
-          write(fd[1], &endTime, sizeof(endTime));
+    while (1) {
+        if (currentTime == scheduleEnd) {
+            activeDirection = 1 - activeDirection; // Toggle the direction
+            if (onHold.preferredDirection == activeDirection) {
+                scheduleEnd += 10;
+                processedTravellers++;
+                write(communicationPipe[1], &scheduleEnd, sizeof(scheduleEnd));
+            }
         }
-        counter++;
-      } else {
-        waiting = people[counter];
-        counter++;
-      }
-    }
 
-    globalTime++;
-    if (endCounter == amountPeople) {
-      break;
+        if (currentTime == travellers[index].scheduledTime) {
+            if (activeDirection == travellers[index].preferredDirection) {
+                if (travellers[index].scheduledTime <= scheduleEnd) {
+                    scheduleEnd = travellers[index].scheduledTime + 10;
+                    processedTravellers++;
+                    write(communicationPipe[1], &scheduleEnd, sizeof(scheduleEnd));
+                }
+                index++;
+            } else {
+                onHold = travellers[index];
+                index++;
+            }
+        }
+
+        currentTime++;
+        if (processedTravellers == numberOfTravellers) {
+            break;
+        }
     }
-  }
 }
 
 int main() {
-  FILE *file = fopen("entrada.txt", "r");
-  if (file == NULL) {
-    printf("Erro ao abrir arquivo de entrada.\n");
-    return 1;
-  }
-
-  if (fscanf(file, "%d", &amountPeople) != 1) {
-    printf("Erro ao ler número de pessoas");
-    fclose(file);
-    return 1;
-  }
-
-  Person people[amountPeople];
-
-  for (int i = 0; i < amountPeople; i++) {
-    if (fscanf(file, "%d %d", &people[i].time, &people[i].direction) != 2) {
-      printf("Erro ao ler informações da pessoa %d.\n", i + 1);
-      fclose(file);
-      return 1;
+    FILE *inputFile = fopen("input.txt", "r");
+    if (inputFile == NULL) {
+        fprintf(stderr, "Failed to open input file.\n");
+        return EXIT_FAILURE;
     }
-  }
 
-  if (pipe(fd) == -1) {
-    printf("Pipe failed.\n");
-    return 1;
-  }
+    if (fscanf(inputFile, "%d", &numberOfTravellers) != 1) {
+        fprintf(stderr, "Failed to read the number of travellers.\n");
+        fclose(inputFile);
+        return EXIT_FAILURE;
+    }
 
-  pid_t pid = fork();
-  if (pid < 0) {
-    printf("Erro ao criar processo para a pessoa.\n");
-    fclose(file);
-    return 1;
-  } else if (pid == 0) {
-    close(fd[0]);
-    person(people);
-    close(fd[1]);
-    return 0;
-  }
+    Traveller *travellers = malloc(numberOfTravellers * sizeof(Traveller));
+    if (travellers == NULL) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        fclose(inputFile);
+        return EXIT_FAILURE;
+    }
 
-  int status;
-  if (waitpid(pid, &status, 0) < 0) {
-    printf("Erro ao aguardar processo da pessoa.\n");
-    fclose(file);
-    return 1;
-  }
+    for (int i = 0; i < numberOfTravellers; i++) {
+        if (fscanf(inputFile, "%d %d", &travellers[i].scheduledTime, &travellers[i].preferredDirection) != 2) {
+            fprintf(stderr, "Failed to read information for traveller %d.\n", i + 1);
+            free(travellers);
+            fclose(inputFile);
+            return EXIT_FAILURE;
+        }
+    }
+    fclose(inputFile);
 
-  close(fd[1]);
-  int temp;
-  while (read(fd[0], &temp, sizeof(temp)) > 0) {
-    endTime = temp;
-  }
+    if (pipe(communicationPipe) == -1) {
+        fprintf(stderr, "Pipe creation failed.\n");
+        free(travellers);
+        return EXIT_FAILURE;
+    }
 
-  printf("%d\n", endTime);
-  close(fd[0]);
+    pid_t pid = fork();
+    if (pid == -1) {
+        fprintf(stderr, "Process creation failed.\n");
+        free(travellers);
+        return EXIT_FAILURE;
+    } else if (pid == 0) {
+        close(communicationPipe[0]);
+        handleTraveller(travellers);
+        close(communicationPipe[1]);
+        free(travellers);
+        exit(EXIT_SUCCESS);
+    }
 
-  return 0;
+    close(communicationPipe[1]);
+    int temp;
+    FILE *outputFile = fopen("output.txt", "w");
+    if (!outputFile) {
+        fprintf(stderr, "Failed to open output file.\n");
+        return EXIT_FAILURE;
+    }
+
+    while (read(communicationPipe[0], &temp, sizeof(temp)) > 0) {
+        scheduleEnd = temp;
+    }
+    fprintf(outputFile, "%d\n", scheduleEnd);
+    fclose(outputFile);
+    close(communicationPipe[0]);
+
+    wait(NULL);
+    return EXIT_SUCCESS;
 }
