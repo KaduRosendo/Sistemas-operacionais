@@ -7,11 +7,11 @@
 int rows = 2; // Número de linhas da matriz
 int cols = 2; // Número de colunas da matriz
 int num_threads = 4; // Total de threads
-double matrix[DIMENSION_LIMIT][DIMENSION_LIMIT]; // Matriz principal
+double matriz[DIMENSION_LIMIT][DIMENSION_LIMIT]; // Matriz principal
 double vector[DIMENSION_LIMIT]; // Vetor de entrada
 double result[DIMENSION_LIMIT]; // Vetor de saída
 
-void *MatrixVectorMultiply(void *arg) {
+void *MatrizVectorMultiply(void *arg) {
     long id = (long) arg;
     int local_rows = rows / num_threads;
     int start_row = id * local_rows;
@@ -20,7 +20,7 @@ void *MatrixVectorMultiply(void *arg) {
     for (int row = start_row; row < end_row; row++) {
         result[row] = 0.0;
         for (int col = 0; col < cols; col++)
-            result[row] += matrix[row][col] * vector[col];
+            result[row] += matriz[row][col] * vector[col];
     }
 
     return NULL;
@@ -37,8 +37,8 @@ int main() {
     printf("Digite os valores para a matriz de dimensão %dx%d:\n", rows, cols);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            printf("matrix[%d][%d]: ", i, j);
-            scanf("%lf", &matrix[i][j]);
+            printf("matriz[%d][%d]: ", i, j);
+            scanf("%lf", &matriz[i][j]);
         }
     }
 
@@ -51,7 +51,7 @@ int main() {
 
     // Criação de threads para multiplicação da matriz pelo vetor
     for (thread_id = 0; thread_id < num_threads; thread_id++) {
-        pthread_create(&threads[thread_id], NULL, MatrixVectorMultiply, (void *) thread_id);
+        pthread_create(&threads[thread_id], NULL, MatrizVectorMultiply, (void *) thread_id);
     }
 
     // Esperar todas as threads completarem
