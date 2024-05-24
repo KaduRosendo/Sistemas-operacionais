@@ -15,6 +15,10 @@ Assim, o código permite múltiplas transferências simultâneas, garante que n�
 ## Requisitos
 1- A conta TO pode recerber mais de uma tranferência simultânea:
 
+Implementação no código:
+
+![image](https://github.com/KaduRosendo/Sistemas-operacionais/assets/100209440/9a2f7c48-2c3b-47e8-be64-40d4fa83541e)
+
 2- A conta FROM pode enviar mais de uma trasferência simultânea:
 
 3- A conta FROM não pode enviar dinheiro se não tiver mais saldo;
