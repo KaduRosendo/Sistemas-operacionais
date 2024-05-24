@@ -12,7 +12,7 @@
 #define STACK_SIZE (1024 * 64)
 
 struct Account {
-    int balance;
+    int saldo;
 };
 typedef struct Account Account;
 
@@ -24,9 +24,9 @@ pthread_mutex_t mutex; // Mutex para sincronização
 void *transferFROM(void *arg) {
     pthread_mutex_lock(&mutex); // Bloqueia o mutex antes de acessar as variáveis compartilhadas
 
-    if (from.balance >= Value1) {
-        from.balance -= Value1;
-        to.balance += Value1;
+    if (from.saldo >= Value1) {
+        from.saldo -= Value1;
+        to.saldo += Value1;
     } else {
         printf("Saldo insuficiente!\n");
         pthread_mutex_unlock(&mutex);
@@ -34,8 +34,8 @@ void *transferFROM(void *arg) {
     }
 
     printf("Transferência concluída com sucesso!\n");
-    printf("Saldo da conta C1: %d\n", from.balance);
-    printf("Saldo da conta C2: %d\n", to.balance);
+    printf("Saldo da conta C1: %d\n", from.saldo);
+    printf("Saldo da conta C2: %d\n", to.saldo);
 
     pthread_mutex_unlock(&mutex); // Libera o mutex após o acesso às variáveis compartilhadas
     return NULL;
@@ -44,9 +44,9 @@ void *transferFROM(void *arg) {
 void *transferTO(void *arg) {
     pthread_mutex_lock(&mutex); // Bloqueia o mutex antes de acessar as variáveis compartilhadas
 
-    if (to.balance >= Value2) {
-        to.balance -= Value2;
-        from.balance += Value2;
+    if (to.saldo >= Value2) {
+        to.saldo -= Value2;
+        from.saldo += Value2;
     } else {
         printf("Saldo insuficiente!\n");
         pthread_mutex_unlock(&mutex);
@@ -54,8 +54,8 @@ void *transferTO(void *arg) {
     }
 
     printf("Transferência concluída com sucesso!\n");
-    printf("Saldo da conta C1: %d\n", from.balance);
-    printf("Saldo da conta C2: %d\n", to.balance);
+    printf("Saldo da conta C1: %d\n", from.saldo);
+    printf("Saldo da conta C2: %d\n", to.saldo);
 
     pthread_mutex_unlock(&mutex); // Libera o mutex após o acesso às variáveis compartilhadas
     return NULL;
@@ -67,8 +67,8 @@ int main() {
     int i;
 
     // Inicialização das contas
-    from.balance = 100;
-    to.balance = 100;
+    from.saldo = 100;
+    to.saldo = 100;
     Value1 = 20;
     Value2 = 10;
 
