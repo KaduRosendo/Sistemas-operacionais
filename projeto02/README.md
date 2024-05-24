@@ -13,6 +13,14 @@ Assim, o código permite múltiplas transferências simultâneas, garante que n�
 
 
 ## Requisitos
-1- 
+1- A conta TO pode recerber mais de uma tranferência simultânea:
+
+2- A conta FROM pode enviar mais de uma trasferência simultânea:
+
+3- A conta FROM não pode enviar dinheiro se não tiver mais saldo;
+
+4- A conta TO pode trocar de ordem com a conta FROM, ou seja, a conta que recebia pode enviar:
+
+5- Poderão ser realizadas até 100 transações simultâneas de tranferência:
 
 
